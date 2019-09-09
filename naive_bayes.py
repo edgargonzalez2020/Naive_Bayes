@@ -62,14 +62,11 @@ class NaiveBayes:
 		for x in self.classes_train_test:
 			print(x, self.classes_train_test[x].shape)
 			print(self.classes_train_test[x])
-	def gauss(self, x, mean, sd):
-		var = float(sd)**2
-		denom = (2*math.pi*var)**.5
+	def gauss(self, x, mean, stdev):
+		var = float(stdev)**2
+		denom = (2*np.pi*var)**.5
 		num = math.exp(-(float(x)-float(mean))**2/(2*var))
 		return num/denom
-		# first = np.divide(1, stdev * np.sqrt(2 * np.pi))
-		# second = np.exp( -1 * np.divide(np.power(x-mean, 2), 2 * np.power(stdev, 2)) )
-		# return first * second
 	def predict(self, x):
 		oh = []
 		hm = {}
@@ -126,7 +123,5 @@ def main():
 		print('Usage: [path to training file] [path to test file]')
 	classifier = NaiveBayes(sys.argv[1], sys.argv[2])
 	classifier.run_predictions()
-	#classifier.print()
-
 if __name__ == '__main__':
 	main()
