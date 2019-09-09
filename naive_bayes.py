@@ -2,11 +2,15 @@ import numpy as np
 import pandas
 import sys
 import operator
+import math
+
+
 
 class NaiveBayes:
 	def __init__(self, training_path, test_path):
 		self.training_path = training_path
 		self.test_path = test_path
+		self.idx_mapping = {}
 		self.classes_train = {}
 		self.count = 0
 		self.test_data = None
@@ -29,12 +33,16 @@ class NaiveBayes:
 				else:
 					self.classes_train[class_label] = np.vstack([self.classes_train[class_label], row[:-1]])
 			self.classes_train = dict(sorted(self.classes_train.items()))
+			for i,x in enumerate(self.classes_train):
+				self.idx_mapping[i] = x
+
+
 		else:
 			self.test_data = self.load_data(self.test_path)
 	def mean(self, data):
 		return data.mean(axis=0)
 	def stdev(self, data):
-		return data.std(axis=0)
+		return data.std(axis=0, ddof=1)
 	def train(self):
 		num = 1
 		for x in self.classes_train:
@@ -54,10 +62,14 @@ class NaiveBayes:
 		for x in self.classes_train_test:
 			print(x, self.classes_train_test[x].shape)
 			print(self.classes_train_test[x])
-	def gauss(self, x, mean, stdev):
-		first = 1 / ( stdev * np.sqrt(2 * np.pi))
-		second = np.exp(-(np.power(x-mean, 2)) / (2 * np.power(stdev, 2)))
-		return first * second
+	def gauss(self, x, mean, sd):
+		var = float(sd)**2
+		denom = (2*math.pi*var)**.5
+		num = math.exp(-(float(x)-float(mean))**2/(2*var))
+		return num/denom
+		# first = np.divide(1, stdev * np.sqrt(2 * np.pi))
+		# second = np.exp( -1 * np.divide(np.power(x-mean, 2), 2 * np.power(stdev, 2)) )
+		# return first * second
 	def predict(self, x):
 		oh = []
 		hm = {}
@@ -78,29 +90,37 @@ class NaiveBayes:
 			oh.append(numerator/ p_x)
 		return oh
 	def run_predictions(self):
+		avg = 0
 		count = 1
 		for x in self.test_data:
 			class_label = int(x[-1])
 			oh = self.predict(x[:-1])
-			print(oh)
-			# predicted = int(self.get_one_hot(oh))
-			# accuracy = 0 if predicted != class_label else 1
-			# print('ID={: 5d}, predicted={:3d}, probability = {:.4f}, true={: 3d}, accuracy={: 4.2f}'.format(count, int(predicted), oh[predicted], int(class_label), accuracy))
-			# count += 1
-	def get_one_hot(self, x):
-		return np.argmax(x)
-
-
-
-
-
-
-
-
-
-
-		
-
+			avg = self.get_one_hot(oh, class_label, count, avg)
+			count += 1
+		print('classification accuracy={: 6.4f}'.format(avg/count))
+	def get_one_hot(self, x, class_label, count, avg):
+		ties = []
+		local_max = float('-inf')
+		idx = -1
+		for i, k in enumerate(x):
+			if local_max < k:
+				local_max = k
+				idx = i
+		seen = {}
+		for j in x:
+			seen[j] = seen.get(j, 0) + 1
+		for j in seen:
+			if seen[j] > 1 and j == local_max:
+				ties.append(j)
+		accuracy = 0 if self.idx_mapping[idx]!= class_label else 1
+		if ties != []:
+			if self.idx_mapping[idx] == class_label:
+				accuracy /= len(ties)
+			else:
+				accuracy = 0
+		avg += accuracy
+		print('ID={: 5d}, predicted={:3d}, probability = {:.4f}, true={: 3d}, accuracy={: 4.2f}'.format(count, self.idx_mapping[int(idx)], x[idx], int(class_label), accuracy))
+		return avg
 def main():
 	if len(sys.argv) < 3:
 		print('Usage: [path to training file] [path to test file]')
