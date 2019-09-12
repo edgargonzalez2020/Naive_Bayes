@@ -53,11 +53,9 @@ class NaiveBayes:
 			if x not in self.statistics:
 				self.statistics[x] = (mean,stdev, self.classes_train[x].shape[0] / self.count)
 			for y in range(mean.shape[0]):
-				print('Class {}, attribute {}, mean = {:.2f}, std = {:.2f} '.format(int(x),num,mean[y],stdev[y]))
+				print('Class %d, attribute %d, mean = %.2f, std = %.2f' % (int(x),num,mean[y],stdev[y]))
 				num += 1
 			num = 1
-		#self.predict(self.classes_train[8][0,:], 8)
-
 	def print(self):
 		for x in self.classes_train_test:
 			print(x, self.classes_train_test[x].shape)
@@ -67,6 +65,7 @@ class NaiveBayes:
 		denom = (2*np.pi*var)**.5
 		num = math.exp(-(float(x)-float(mean))**2/(2*var))
 		return num/denom
+
 	def predict(self, x):
 		oh = []
 		hm = {}
@@ -94,7 +93,7 @@ class NaiveBayes:
 			oh = self.predict(x[:-1])
 			avg = self.get_one_hot(oh, class_label, count, avg)
 			count += 1
-		print('classification accuracy={: 6.4f}'.format(avg/count))
+		print('classification accuracy=%6.4f' % (avg/count))
 	def get_one_hot(self, x, class_label, count, avg):
 		ties = []
 		local_max = float('-inf')
@@ -116,7 +115,7 @@ class NaiveBayes:
 			else:
 				accuracy = 0
 		avg += accuracy
-		print('ID={: 5d}, predicted={:3d}, probability = {:.4f}, true={: 3d}, accuracy={: 4.2f}'.format(count, self.idx_mapping[int(idx)], x[idx], int(class_label), accuracy))
+		print('ID=%5d, predicted=%3d, probability = %.4f, true=%3d, accuracy=%4.2f' % (count, self.idx_mapping[int(idx)], x[idx], int(class_label), accuracy))
 		return avg
 def main():
 	if len(sys.argv) < 3:
